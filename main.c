@@ -51,15 +51,13 @@ int main(void)
             UART_SendNum(score);
             UART_Send("\r\n");
 
-            // 命中反馈：播放音效 + 蓝灯闪 + 屏幕闪红
+            // 命中反馈：音效 + 蓝灯闪 + 分数短暂变红（不再整屏刷屏）
             DFPlayer_PlayTrack(1);                              // 播放 SD 卡 0001.mp3
             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);  // 蓝灯亮
-            ST7735_FillScreen(ST7735_RED);
-            SysCtlDelay(SysCtlClockGet() / 30);                      // ~100ms
+            ST7735_PrintInt(20, 60, score, ST7735_RED, ST7735_BLACK, 5);  // 分数变红
+            SysCtlDelay(SysCtlClockGet() / 15);                      // ~200ms
             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);            // 蓝灯灭
-
-            ST7735_FillScreen(ST7735_BLACK);
-            ST7735_PrintInt(20, 60, score, ST7735_WHITE, ST7735_BLACK, 5);
+            ST7735_PrintInt(20, 60, score, ST7735_WHITE, ST7735_BLACK, 5);  // 变回白色
         }
 
         SysCtlDelay(SysCtlClockGet() / 3000);   // ~1ms，控制主循环速度

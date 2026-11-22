@@ -160,7 +160,7 @@ void ST7735_Init(void)
 
     write_cmd(0x20);              // INVOFF（若颜色反了改成 0x21 INVON）
     write_cmd(0x36);              // MADCTL（旋转方向）
-    write_data(0xC8);
+    write_data(0xC0);             // 清 BGR 位，纠正红蓝反色
     write_cmd(0x3A);              // COLMOD 16bit
     write_data(0x05);
 
