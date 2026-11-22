@@ -7,13 +7,7 @@
 #include "photoresistor.h"
 #include "st7735.h"
 #include "uart.h"
-
-// 外接 RGB 灯（共阴）：R=PB0, G=PB5, B=PB6，用来做「命中变色」
-#define LED_PORT GPIO_PORTB_BASE
-#define LED_R    GPIO_PIN_0
-#define LED_G    GPIO_PIN_5
-#define LED_B    GPIO_PIN_6
-#define LED_ALL  (LED_R | LED_G | LED_B)
+#include "dfplayer.h"
 
 int main(void)
 {
@@ -23,20 +17,20 @@ int main(void)
     SysCtlClockSet(SYSCTL_SYSDIV_5 | SYSCTL_USE_PLL |
                    SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
 
-    UART_Init();                 // 串口
+    UART_Init();                 // 调试串口 UART0
     Photoresistor_Init();        // 光敏电阻 ADC
     Photoresistor_Calibrate();   // 采环境光基线
     ST7735_Init();               // 显示屏
+    DFPlayer_Init();             // 音效播放模块（UART2）
 
-    // RGB 灯初始化：待机亮绿灯
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-    GPIOPinTypeGPIOOutput(LED_PORT, LED_ALL);
-    GPIOPinWrite(LED_PORT, LED_ALL, LED_G);   // 绿 = 待机
-
-    // 板载蓝灯 PF2，命中时也闪一下
+    // 板载蓝灯 PF2，命中时闪一下
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_2);
     GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);
+
+    // 等 DFPlayer 初始化完成（读 SD 卡需要时间），约 1 秒
+    SysCtlDelay(SysCtlClockGet() / 3);
+    DFPlayer_SetVolume(20);      // 音量 20（范围 0~30）
 
     // 屏幕初始显示 0 分
     ST7735_FillScreen(ST7735_BLACK);
@@ -48,6 +42,7 @@ int main(void)
 
     while (1)
     {
+        // 激光直射 → IsHit 只在「光从暗变亮」时返回一次 true
         if (Photoresistor_IsHit())
         {
             score++;
@@ -56,13 +51,12 @@ int main(void)
             UART_SendNum(score);
             UART_Send("\r\n");
 
-            // 命中变色：绿 → 红（持续约 200ms），再回绿
-            GPIOPinWrite(LED_PORT, LED_ALL, LED_R);                    // 变红
-            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);     // 板载蓝灯亮
-            ST7735_FillScreen(ST7735_RED);                              // 屏幕闪红
-            SysCtlDelay(SysCtlClockGet() / 15);                         // ~200ms
-            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);               // 蓝灯灭
-            GPIOPinWrite(LED_PORT, LED_ALL, LED_G);                     // 回绿
+            // 命中反馈：播放音效 + 蓝灯闪 + 屏幕闪红
+            DFPlayer_PlayTrack(1);                              // 播放 SD 卡 0001.mp3
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);  // 蓝灯亮
+            ST7735_FillScreen(ST7735_RED);
+            SysCtlDelay(SysCtlClockGet() / 30);                      // ~100ms
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0);            // 蓝灯灭
 
             ST7735_FillScreen(ST7735_BLACK);
             ST7735_PrintInt(20, 60, score, ST7735_WHITE, ST7735_BLACK, 5);

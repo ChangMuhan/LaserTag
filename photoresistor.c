@@ -13,7 +13,7 @@
 #define LDR_ADC_CH ADC_CTL_CH10
 
 // 注意：这个模块光越强，AO 电压越低，所以「命中」是 ADC 明显下降。
-#define HIT_MARGIN 200   // 命中阈值：低于「基线 - 200」算命中
+#define HIT_MARGIN 450   // 命中阈值：低于「基线 - 450」算命中（只认激光，避开手机灯等干扰）
 #define NEAR_BAND  150   // 正常环境光允许的波动范围，超出说明被遮住或被打中
 
 static uint32_t baseline   = 0;    // 环境光基线
