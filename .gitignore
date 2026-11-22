@@ -1,0 +1,53 @@
+# 编译输出
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.d
+*.out
+*.axf
+
+# IDE工程文件
+.ccsproject
+.cproject
+.project
+.settings/
+.launches/
+Debug/
+Release/
+
+# Keil MDK
+*.uvproj
+*.uvopt
+*.bak
+*.dep
+*.uvguix.*
+Objects/
+Listings/
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# 临时文件
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# 烧录工具
+*.jlink
+*.cfg
+
+# 日志
+*.log
